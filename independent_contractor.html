@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>家内労働者特例 判定ツール（給与控除対応）</title>
+<style>
+  body { font-family: Arial, sans-serif; padding: 20px; }
+  label { display: block; margin-top: 10px; }
+</style>
+</head>
+<body>
+
+<h2>家内労働者等の必要経費特例 判定ツール</h2>
+
+<form id="form1">
+
+  <label>1. シルバー人材センターからの収入ですか？</label>
+  <input type="radio" name="isSilver" value="yes"> はい
+  <input type="radio" name="isSilver" value="no"> いいえ
+
+  <label>2. その収入は事業所得または雑所得として申告しますか？</label>
+  <input type="radio" name="isBizOrMisc" value="yes"> はい
+  <input type="radio" name="isBizOrMisc" value="no"> いいえ
+
+  <label>3. 給与収入（他の会社等からの収入）がある？</label>
+  <input type="radio" name="hasSalary" value="yes"> はい
+  <input type="radio" name="hasSalary" value="no"> いいえ
+
+  <label>給与収入の金額（円）</label>
+  <input type="number" id="salaryValue" min="0" placeholder="例: 400000">
+
+  <label>家内労働者収入の総額（円）</label>
+  <input type="number" id="kanaiIncome" min="0" placeholder="例: 800000">
+
+  <label>実際に使った経費（円）</label>
+  <input type="number" id="actualExp" min="0" placeholder="例: 100000">
+
+  <button type="button" onclick="runCheck()">判定する</button>
+</form>
+
+<h3>判定結果：</h3>
+<p id="output"></p>
+
+<script>
+// 給与所得控除を計算（令和7年分以降）
+function calcSalaryDeduction(salary) {
+    if (salary <= 1900000) return 650000;
+    if (salary <= 3600000) return salary * 0.30 + 80000;
+    if (salary <= 6600000) return salary * 0.20 + 440000;
+    if (salary <= 8500000) return salary * 0.10 + 1100000;
+    return 1950000;
+}
+
+function runCheck() {
+    const isSilver = document.querySelector('input[name="isSilver"]:checked')?.value;
+    const isBizOrMisc = document.querySelector('input[name="isBizOrMisc"]:checked')?.value;
+    const hasSalary = document.querySelector('input[name="hasSalary"]:checked')?.value;
+
+    const salary = parseFloat(document.getElementById("salaryValue").value) || 0;
+    const kanaiIncome = parseFloat(document.getElementById("kanaiIncome").value) || 0;
+    const actualExp = parseFloat(document.getElementById("actualExp").value) || 0;
+
+    const output = document.getElementById("output");
+    output.innerText = "";
+
+    if (!isSilver || !isBizOrMisc || !hasSalary) {
+        output.innerText = "すべての質問に答えてください。";
+        return;
+    }
+    if (isSilver === "no" || isBizOrMisc === "no") {
+        output.innerText = "家内労働者等の特例の対象外です。";
+        return;
+    }
+    // 必要経費特例の上限 65万円
+    const limit = 650000;
+
+    let salaryDed = 0, netSalaryIncome = 0;
+    if (hasSalary === "yes") {
+        salaryDed = calcSalaryDeduction(salary);
+        netSalaryIncome = salary - salaryDed;
+    }
+
+    // 特例適用可能額
+    let eligibleAmount = limit;
+    if (hasSalary === "yes") {
+        // 給与所得控除を上限として調整
+        eligibleAmount = Math.max(0, limit - salaryDed);
+    }
+
+    // 判定
+    if (eligibleAmount <= 0) {
+        output.innerText = "給与の給与所得控除額が大きく、家内労働者特例の適用枠がありません。";
+        return;
+    }
+
+    const usedExp = Math.max(actualExp, eligibleAmount);
+    output.innerText =
+      `対象です！\n` +
+      `・給与所得控除額: ${Math.round(salaryDed)} 円\n` +
+      `・適用できる家内労働者必要経費特例額: 最大 ${Math.round(eligibleAmount)} 円\n` +
+      `・今回の経費として反映されるのは: ${Math.round(usedExp)} 円`;
+}
+</script>
+
+</body>
+</html>
