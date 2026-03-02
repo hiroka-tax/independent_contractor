@@ -15,7 +15,7 @@
     .keisan-table .num-no-cell { text-align: center; width: 30px; font-weight: bold; color: #333; }
     .note-cell { font-size: 12px; width: 200px; vertical-align: top; padding: 8px; }
     .note-cell .note-title { font-weight: bold; }
-    .note-cell .note-transfer { margin-top: 10px; padding: 6px 8px; background: #eaf4fb; border-left: 3px solid #1a73e8; font-size: 11px; line-height: 1.6; }
+    .note-cell .note-transfer { margin-top: 10px; padding: 6px 8px; background: #eaf4fb; border-left: 3px solid #1a73e8; font-size: 11px; line-height: 1.7; }
     .print-btn { margin-top: 20px; padding: 10px 24px; font-size: 15px; background: #1a73e8; color: white; border: none; border-radius: 4px; cursor: pointer; }
     .print-btn:hover { background: #1558b0; }
     @media print {
@@ -137,6 +137,24 @@
       return Math.round(n).toLocaleString() + ' 円';
     }
 
+    var TRANSFER_JIGYO =
+      '<b>【申告書への転記】</b><br><br>' +
+      '①の金額から⑦または⑧の金額を控除した残額を書いてください。' +
+      'その際、金額の頭部に㊁と書いてください。<br><br>' +
+      '<b>青色申告の方：</b>' +
+      '青色申告決算書の「青色申告特別控除前の所得金額」欄へ。' +
+      'なお、申告書第一表の「所得金額等」欄の<b>営業等・農業</b>には、' +
+      '青色申告特別控除後の所得金額を転記します。<br><br>' +
+      '<b>白色申告の方：</b>' +
+      '収支内訳書の「所得金額」欄へ。' +
+      'なお、申告書第一表の「所得金額等」欄の<b>営業等・農業</b>には、' +
+      '収支内訳書の所得金額を転記します。';
+
+    var TRANSFER_ZATSU =
+      '<b>【申告書への転記】</b><br><br>' +
+      '業務に係る雑所得の総収入金額（③）から⑨の金額を控除した残額を、<br>' +
+      '申告書第一表の「所得金額等」欄の<b>業務</b>に書いてください。';
+
     function runCheck() {
       const isSilver    = document.querySelector('input[name="isSilver"]:checked')?.value;
       const isBizOrMisc = document.querySelector('input[name="isBizOrMisc"]:checked')?.value;
@@ -164,7 +182,6 @@
 
       const limit = 650000;
 
-      // 給与収入が65万円以上なら特例なし
       if (hasSalary === "yes" && salary >= limit) {
         resultText.innerText = "給与収入が65万円以上のため、家内労働者特例の適用はありません。";
         return;
@@ -175,7 +192,6 @@
       const val3 = (incomeType === "zatsu") ? kanaiIncome : 0;
       const val4 = (hasSalary  === "yes")  ? salary       : 0;
 
-      // 令和7年分：給与収入が65万円未満の場合、給与所得控除額 = 給与収入
       const val5 = Math.max(0, limit - val2 - val4);
       const val6 = Math.max(0, limit - val3 - val4);
 
@@ -205,22 +221,8 @@
       document.getElementById("td8").innerText = val8 > 0 ? fmt(val8) : "―";
       document.getElementById("td9").innerText = val9 > 0 ? fmt(val9) : "―";
 
-      // 申告書への転記案内（所得種類に応じて切り替え）
-      const noteTransfer = document.getElementById("note-transfer");
-      if (incomeType === "jigyo") {
-        noteTransfer.innerHTML =
-          "<b>【申告書への転記】</b><br>" +
-          "⑦または⑧の金額を、<br>" +
-          "青色申告の方：青色申告決算書の「必要経費」欄へ<br>" +
-          "白色申告の方：収支内訳書の「必要経費」欄へ<br>" +
-          "記入してください。";
-      } else {
-        noteTransfer.innerHTML =
-          "<b>【申告書への転記】</b><br>" +
-          "⑨の金額を、<br>" +
-          "確定申告書「雑所得」の「必要経費」欄へ<br>" +
-          "記入してください。";
-      }
+      var noteTransfer = document.getElementById("note-transfer");
+      noteTransfer.innerHTML = (incomeType === "jigyo") ? TRANSFER_JIGYO : TRANSFER_ZATSU;
       noteTransfer.style.display = "";
 
       keisanSection.style.display = "block";
