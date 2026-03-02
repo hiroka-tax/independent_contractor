@@ -23,162 +23,196 @@
   </style>
 </head>
 <body>
-<h2>家内労働者等の必要経費特例 判定ツール</h2>
-<div id="form-section">
-  <form id="form1">
-    <label>1. シルバー人材センターからの収入ですか？</label>
-    <input type="radio" name="isSilver" value="yes"> はい
-    <input type="radio" name="isSilver" value="no"> いいえ
-    <label>2. その収入は事業所得または雑所得として申告しますか？</label>
-    <input type="radio" name="isBizOrMisc" value="yes"> はい
-    <input type="radio" name="isBizOrMisc" value="no"> いいえ
-    <label>3. 所得の種類を選んでください</label>
-    <input type="radio" name="incomeType" value="jigyo"> 事業所得
-    <input type="radio" name="incomeType" value="zatsu"> 雑所得
-    <label>4. 給与収入（他の会社等からの収入）がある？</label>
-    <input type="radio" name="hasSalary" value="yes"> はい
-    <input type="radio" name="hasSalary" value="no"> いいえ
-    <label>給与収入の金額（円）</label>
-    <input type="number" id="salaryValue" min="0" placeholder="例: 400000">
-    <label>家内労働者収入の総額（円）</label>
-    <input type="number" id="kanaiIncome" min="0" placeholder="例: 800000">
-    <label>特例適用前の必要経費の額（円）※実際にかかった経費</label>
-    <input type="number" id="actualExp" min="0" placeholder="例: 100000">
-    <button type="button" onclick="runCheck()" style="margin-top:16px; padding:8px 20px; font-size:15px;">判定する</button>
-  </form>
-</div>
-<div id="result-section">
-  <h3>判定結果：</h3>
-  <p id="result-text" style="white-space:pre-line;"></p>
-</div>
-<div id="keisan-section" style="display:none;">
-  <h3>家内労働者等の事業所得等の所得計算の特例　計算書</h3>
-  <p style="font-size:13px; color:#555;">※申告書第二表の「特例適用条文等」欄に「措法２７」と書いてください。</p>
-  <table class="keisan-table">
-    <tbody>
-      <tr>
-        <td class="row-header" rowspan="2">事業所得</td>
-        <td class="label-cell">総収入金額 <span class="circle">①</span></td>
-        <td class="num-cell" id="td1"></td>
-        <td rowspan="9" style="font-size:12px; width:200px; vertical-align:top; padding:8px;">
-          <b>記入上の注意</b><br><br>
-          ・⑤または⑥が赤字のときは0<br><br>
-          ・この計算書を使った方は、申告書第二表の「特例適用条文等」欄に「措法２７」と書いてください。
-        </td>
-      </tr>
-      <tr>
-        <td class="label-cell">特例適用前の必要経費の額 <span class="circle">②</span></td>
-        <td class="num-cell" id="td2"></td>
-      </tr>
-      <tr>
-        <td class="row-header">雑所得</td>
-        <td class="label-cell">総収入金額（公的年金等に係るものを除く） <span class="circle">③</span></td>
-        <td class="num-cell" id="td3"></td>
-      </tr>
-      <tr>
-        <td class="row-header">給与</td>
-        <td class="label-cell">給与所得の収入金額 <span class="circle">④</span></td>
-        <td class="num-cell" id="td4"></td>
-      </tr>
-      <tr>
-        <td class="row-header"></td>
-        <td class="label-cell">65万円 － <span class="circle">②</span> － <span class="circle">④</span>（赤字のときは0） <span class="circle">⑤</span></td>
-        <td class="num-cell" id="td5"></td>
-      </tr>
-      <tr>
-        <td class="row-header"></td>
-        <td class="label-cell">65万円 － <span class="circle">③</span> － <span class="circle">④</span>（赤字のときは0） <span class="circle">⑥</span></td>
-        <td class="num-cell" id="td6"></td>
-      </tr>
-      <tr>
-        <td class="row-header" rowspan="3">特例適用後の必要経費の額</td>
-        <td class="label-cell">事業所得<br><small>③がない場合または③が⑤以下の場合：①と⑥のいずれか少ない方の金額 <span class="circle">⑦</span><br>③が⑤より多い場合：②の金額 <span class="circle">⑧</span></small></td>
-        <td class="num-cell" id="td7"></td>
-      </tr>
-      <tr>
-        <td class="label-cell"></td>
-        <td class="num-cell" id="td8"></td>
-      </tr>
-      <tr>
-        <td class="label-cell">雑所得：③と⑤のいずれか少ない方の金額 <span class="circle">⑨</span></td>
-        <td class="num-cell" id="td9"></td>
-      </tr>
-    </tbody>
-  </table>
-  <br>
-  <button class="print-btn" onclick="window.print()">印刷する（計算書のみ印刷されます）</button>
-</div>
-<script>
-  // 令和2年分以降の給与所得控除額
-  function calcSalaryDeduction(salary) {
-    if (salary <= 1625000) return 550000;
-    if (salary <= 1800000) return Math.floor(salary * 0.4) - 100000;
-    if (salary <= 3600000) return Math.floor(salary * 0.3) + 80000;
-    if (salary <= 6600000) return Math.floor(salary * 0.2) + 440000;
-    if (salary <= 8500000) return Math.floor(salary * 0.1) + 1100000;
-    return 1950000;
-  }
-  function fmt(n) {
-    return Math.round(n).toLocaleString() + ' 円';
-  }
-  function runCheck() {
-    const isSilver     = document.querySelector('input[name="isSilver"]:checked')?.value;
-    const isBizOrMisc  = document.querySelector('input[name="isBizOrMisc"]:checked')?.value;
-    const incomeType   = document.querySelector('input[name="incomeType"]:checked')?.value;
-    const hasSalary    = document.querySelector('input[name="hasSalary"]:checked')?.value;
-    const salary      = parseFloat(document.getElementById("salaryValue").value) || 0;
-    const kanaiIncome = parseFloat(document.getElementById("kanaiIncome").value) || 0;
-    const actualExp   = parseFloat(document.getElementById("actualExp").value)   || 0;
-    const resultText    = document.getElementById("result-text");
-    const keisanSection = document.getElementById("keisan-section");
-    resultText.innerText = "";
-    keisanSection.style.display = "none";
-    if (!isSilver || !isBizOrMisc || !incomeType || !hasSalary) {
-      resultText.innerText = "すべての質問に答えてください。";
-      return;
+  <h2>家内労働者等の必要経費特例 判定ツール</h2>
+  <div id="form-section">
+    <form id="form1">
+      <label>1. シルバー人材センターからの収入ですか？</label>
+      <input type="radio" name="isSilver" value="yes"> はい
+      <input type="radio" name="isSilver" value="no"> いいえ
+
+      <label>2. その収入は事業所得または雑所得として申告しますか？</label>
+      <input type="radio" name="isBizOrMisc" value="yes"> はい
+      <input type="radio" name="isBizOrMisc" value="no"> いいえ
+
+      <label>3. 所得の種類を選んでください</label>
+      <input type="radio" name="incomeType" value="jigyo"> 事業所得
+      <input type="radio" name="incomeType" value="zatsu"> 雑所得
+
+      <label>4. 給与収入（他の会社等からの収入）がある？</label>
+      <input type="radio" name="hasSalary" value="yes"> はい
+      <input type="radio" name="hasSalary" value="no"> いいえ
+
+      <label>給与収入の金額（円）</label>
+      <input type="number" id="salaryValue" min="0" placeholder="例: 400000">
+
+      <label>家内労働者収入の総額（円）</label>
+      <input type="number" id="kanaiIncome" min="0" placeholder="例: 800000">
+
+      <label>特例適用前の必要経費の額（円）※実際にかかった経費</label>
+      <input type="number" id="actualExp" min="0" placeholder="例: 100000">
+
+      <button type="button" onclick="runCheck()" style="margin-top:16px; padding:8px 20px; font-size:15px;">判定する</button>
+    </form>
+  </div>
+
+  <div id="result-section">
+    <h3>判定結果：</h3>
+    <p id="result-text" style="white-space:pre-line;"></p>
+  </div>
+
+  <div id="keisan-section" style="display:none;">
+    <h3>家内労働者等の事業所得等の所得計算の特例 計算書</h3>
+    <p style="font-size:13px; color:#555;">※申告書第二表の「特例適用条文等」欄に「措法２７」と書いてください。</p>
+    <table class="keisan-table">
+      <tbody>
+        <tr>
+          <td class="row-header" rowspan="2">事業所得</td>
+          <td class="label-cell">総収入金額 <span class="circle">①</span></td>
+          <td class="num-cell" id="td1"></td>
+          <td rowspan="10" style="font-size:12px; width:200px; vertical-align:top; padding:8px;">
+            <b>記入上の注意</b><br><br>
+            ・⑤または⑥が赤字のときは0<br><br>
+            ・この計算書を使った方は、申告書第二表の「特例適用条文等」欄に「措法２７」と書いてください。
+          </td>
+        </tr>
+        <tr>
+          <td class="label-cell">特例適用前の必要経費の額 <span class="circle">②</span></td>
+          <td class="num-cell" id="td2"></td>
+        </tr>
+        <tr>
+          <td class="row-header">雑所得</td>
+          <td class="label-cell">総収入金額（公的年金等に係るものを除く） <span class="circle">③</span></td>
+          <td class="num-cell" id="td3"></td>
+        </tr>
+        <tr>
+          <td class="row-header">給与</td>
+          <td class="label-cell">給与所得の収入金額 <span class="circle">④</span></td>
+          <td class="num-cell" id="td4"></td>
+        </tr>
+        <tr>
+          <td class="row-header"></td>
+          <td class="label-cell">④に対する給与所得控除額 <span class="circle">④'</span></td>
+          <td class="num-cell" id="td4d"></td>
+        </tr>
+        <tr>
+          <td class="row-header"></td>
+          <td class="label-cell">65万円 － <span class="circle">②</span> － <span class="circle">④'</span>（赤字のときは0） <span class="circle">⑤</span></td>
+          <td class="num-cell" id="td5"></td>
+        </tr>
+        <tr>
+          <td class="row-header"></td>
+          <td class="label-cell">65万円 － <span class="circle">③</span> － <span class="circle">④'</span>（赤字のときは0） <span class="circle">⑥</span></td>
+          <td class="num-cell" id="td6"></td>
+        </tr>
+        <tr>
+          <td class="row-header" rowspan="3">特例適用後の必要経費の額</td>
+          <td class="label-cell">事業所得<br><small>③がない場合または③が⑤以下の場合：①と⑥のいずれか少ない方の金額 <span class="circle">⑦</span><br>③が⑤より多い場合：②の金額 <span class="circle">⑧</span></small></td>
+          <td class="num-cell" id="td7"></td>
+        </tr>
+        <tr>
+          <td class="label-cell"></td>
+          <td class="num-cell" id="td8"></td>
+        </tr>
+        <tr>
+          <td class="label-cell">雑所得：③と⑤のいずれか少ない方の金額 <span class="circle">⑨</span></td>
+          <td class="num-cell" id="td9"></td>
+        </tr>
+      </tbody>
+    </table>
+    <br>
+    <button class="print-btn" onclick="window.print()">印刷する（計算書のみ印刷されます）</button>
+  </div>
+
+  <script>
+    // 令和2年分以降の給与所得控除額
+    function calcSalaryDeduction(salary) {
+      if (salary <= 1625000) return 550000;
+      if (salary <= 1800000) return Math.floor(salary * 0.4) - 100000;
+      if (salary <= 3600000) return Math.floor(salary * 0.3) + 80000;
+      if (salary <= 6600000) return Math.floor(salary * 0.2) + 440000;
+      if (salary <= 8500000) return Math.floor(salary * 0.1) + 1100000;
+      return 1950000;
     }
-    if (isSilver === "no" || isBizOrMisc === "no") {
-      resultText.innerText = "家内労働者等の特例の対象外です。";
-      return;
+
+    function fmt(n) {
+      return Math.round(n).toLocaleString() + ' 円';
     }
-    const limit = 650000;
-    // 【修正3】給与収入が65万円以上なら特例なし（最初にチェック）
-    if (hasSalary === "yes" && salary >= limit) {
-      resultText.innerText = "給与収入が65万円以上のため、家内労働者特例の適用はありません。";
-      return;
-    }
-    const val1 = (incomeType === "jigyo") ? kanaiIncome : 0;
-    const val2 = (incomeType === "jigyo") ? actualExp   : 0;
-    const val3 = (incomeType === "zatsu") ? kanaiIncome : 0;
-    const val4 = (hasSalary  === "yes")  ? salary       : 0;
-    // 【修正2】④は給与収入ではなく給与所得控除額を使う
-    const salaryDeduction = (val4 > 0) ? calcSalaryDeduction(val4) : 0;
-    const val5 = Math.max(0, limit - val2 - salaryDeduction);  // 65万 - ② - 給与所得控除額
-    const val6 = Math.max(0, limit - val3 - salaryDeduction);  // 65万 - ③ - 給与所得控除額
-    let val7 = 0, val8 = 0, val9 = 0;
-    if (incomeType === "jigyo") {
-      if (val3 === 0 || val3 <= val5) {
-        val7 = Math.min(val1, val6);
-      } else {
-        val8 = val2;
+
+    function runCheck() {
+      const isSilver    = document.querySelector('input[name="isSilver"]:checked')?.value;
+      const isBizOrMisc = document.querySelector('input[name="isBizOrMisc"]:checked')?.value;
+      const incomeType  = document.querySelector('input[name="incomeType"]:checked')?.value;
+      const hasSalary   = document.querySelector('input[name="hasSalary"]:checked')?.value;
+
+      const salary      = parseFloat(document.getElementById("salaryValue").value) || 0;
+      const kanaiIncome = parseFloat(document.getElementById("kanaiIncome").value) || 0;
+      const actualExp   = parseFloat(document.getElementById("actualExp").value)   || 0;
+
+      const resultText    = document.getElementById("result-text");
+      const keisanSection = document.getElementById("keisan-section");
+      resultText.innerText = "";
+      keisanSection.style.display = "none";
+
+      if (!isSilver || !isBizOrMisc || !incomeType || !hasSalary) {
+        resultText.innerText = "すべての質問に答えてください。";
+        return;
       }
+
+      if (isSilver === "no" || isBizOrMisc === "no") {
+        resultText.innerText = "家内労働者等の特例の対象外です。";
+        return;
+      }
+
+      const limit = 650000;
+
+      // 給与収入が65万円以上なら特例なし
+      if (hasSalary === "yes" && salary >= limit) {
+        resultText.innerText = "給与収入が65万円以上のため、家内労働者特例の適用はありません。";
+        return;
+      }
+
+      const val1 = (incomeType === "jigyo") ? kanaiIncome : 0;
+      const val2 = (incomeType === "jigyo") ? actualExp   : 0;
+      const val3 = (incomeType === "zatsu") ? kanaiIncome : 0;
+      const val4 = (hasSalary  === "yes")  ? salary       : 0;
+
+      // 給与所得控除額（④'）
+      const salaryDeduction = (val4 > 0) ? calcSalaryDeduction(val4) : 0;
+
+      // ⑤：65万円 - ② - ④'（赤字のときは0）
+      const val5 = Math.max(0, limit - val2 - salaryDeduction);
+      // ⑥：65万円 - ③ - ④'（赤字のときは0）
+      const val6 = Math.max(0, limit - val3 - salaryDeduction);
+
+      let val7 = 0, val8 = 0, val9 = 0;
+
+      if (incomeType === "jigyo") {
+        if (val3 === 0 || val3 <= val5) {
+          val7 = Math.min(val1, val6);
+        } else {
+          val8 = val2;
+        }
+      }
+
+      if (incomeType === "zatsu") {
+        val9 = Math.min(val3, val5);
+      }
+
+      resultText.innerText = "特例の対象です！\n計算書を下に表示します。内容を確認して印刷してください。";
+
+      document.getElementById("td1").innerText  = val1 > 0 ? fmt(val1) : "―";
+      document.getElementById("td2").innerText  = val2 > 0 ? fmt(val2) : "―";
+      document.getElementById("td3").innerText  = val3 > 0 ? fmt(val3) : "―";
+      document.getElementById("td4").innerText  = val4 > 0 ? fmt(val4) : "―";
+      document.getElementById("td4d").innerText = salaryDeduction > 0 ? fmt(salaryDeduction) : "―";
+      document.getElementById("td5").innerText  = fmt(val5);
+      document.getElementById("td6").innerText  = fmt(val6);
+      document.getElementById("td7").innerText  = val7 > 0 ? fmt(val7) : "―";
+      document.getElementById("td8").innerText  = val8 > 0 ? fmt(val8) : "―";
+      document.getElementById("td9").innerText  = val9 > 0 ? fmt(val9) : "―";
+
+      keisanSection.style.display = "block";
     }
-    if (incomeType === "zatsu") {
-      val9 = Math.min(val3, val5);
-    }
-    resultText.innerText = "特例の対象です！\\n計算書を下に表示します。内容を確認して印刷してください。";
-    document.getElementById("td1").innerText = val1 > 0 ? fmt(val1) : "―";
-    document.getElementById("td2").innerText = val2 > 0 ? fmt(val2) : "―";
-    document.getElementById("td3").innerText = val3 > 0 ? fmt(val3) : "―";
-    document.getElementById("td4").innerText = val4 > 0 ? fmt(val4) : "―";
-    document.getElementById("td5").innerText = fmt(val5);
-    document.getElementById("td6").innerText = fmt(val6);
-    document.getElementById("td7").innerText = val7 > 0 ? fmt(val7) : "―";
-    document.getElementById("td8").innerText = val8 > 0 ? fmt(val8) : "―";
-    document.getElementById("td9").innerText = val9 > 0 ? fmt(val9) : "―";
-    keisanSection.style.display = "block";
-  }
-</script>
+  </script>
 </body>
 </html>
-
