@@ -13,6 +13,7 @@
     .keisan-table .label-cell { width: 220px; }
     .keisan-table .num-cell { text-align: right; width: 130px; }
     .keisan-table .circle { font-weight: bold; }
+    .keisan-table .final-row td { background: #fffbe6; font-weight: bold; }
     .print-btn { margin-top: 20px; padding: 10px 24px; font-size: 15px; background: #1a73e8; color: white; border: none; border-radius: 4px; cursor: pointer; }
     .print-btn:hover { background: #1558b0; }
     @media print {
@@ -69,7 +70,7 @@
           <td class="row-header" rowspan="2">事業所得</td>
           <td class="label-cell">総収入金額 <span class="circle">①</span></td>
           <td class="num-cell" id="td1"></td>
-          <td rowspan="10" style="font-size:12px; width:200px; vertical-align:top; padding:8px;">
+          <td rowspan="12" style="font-size:12px; width:200px; vertical-align:top; padding:8px;">
             <b>記入上の注意</b><br><br>
             ・⑤または⑥が赤字のときは0<br><br>
             ・この計算書を使った方は、申告書第二表の「特例適用条文等」欄に「措法２７」と書いてください。
@@ -116,6 +117,15 @@
         <tr>
           <td class="label-cell">雑所得：③と⑤のいずれか少ない方の金額 <span class="circle">⑨</span></td>
           <td class="num-cell" id="td9"></td>
+        </tr>
+        <tr class="final-row">
+          <td class="row-header" rowspan="2">申告に使う必要経費</td>
+          <td class="label-cell" id="td-final-label-jigyo" style="display:none;">事業所得：⑦または⑧と②のいずれか大きい方</td>
+          <td class="num-cell" id="td-final-jigyo" style="display:none;"></td>
+        </tr>
+        <tr class="final-row">
+          <td class="label-cell" id="td-final-label-zatsu" style="display:none;">雑所得：⑨と②のいずれか大きい方</td>
+          <td class="num-cell" id="td-final-zatsu" style="display:none;"></td>
         </tr>
       </tbody>
     </table>
@@ -189,6 +199,11 @@
         val9 = Math.min(val3, val5);
       }
 
+      // 申告に使う必要経費：特例額と実際の経費の大きい方
+      const tokureiJigyo = Math.max(val7, val8);
+      const finalJigyo   = Math.max(tokureiJigyo, val2);
+      const finalZatsu   = Math.max(val9, actualExp);
+
       resultText.innerText = "特例の対象です！\n計算書を下に表示します。内容を確認して印刷してください。";
 
       document.getElementById("td1").innerText  = val1 > 0 ? fmt(val1) : "―";
@@ -201,6 +216,28 @@
       document.getElementById("td7").innerText  = val7 > 0 ? fmt(val7) : "―";
       document.getElementById("td8").innerText  = val8 > 0 ? fmt(val8) : "―";
       document.getElementById("td9").innerText  = val9 > 0 ? fmt(val9) : "―";
+
+      // 最終的な必要経費の表示
+      const labelJigyo = document.getElementById("td-final-label-jigyo");
+      const cellJigyo  = document.getElementById("td-final-jigyo");
+      const labelZatsu = document.getElementById("td-final-label-zatsu");
+      const cellZatsu  = document.getElementById("td-final-zatsu");
+
+      if (incomeType === "jigyo") {
+        labelJigyo.style.display = "";
+        cellJigyo.style.display  = "";
+        labelZatsu.style.display = "none";
+        cellZatsu.style.display  = "none";
+        const note = finalJigyo === val2 && val2 > tokureiJigyo ? "（実際の経費の方が大きいため、実際の経費を使います）" : "（特例による金額）";
+        cellJigyo.innerText  = fmt(finalJigyo) + " " + note;
+      } else {
+        labelZatsu.style.display = "";
+        cellZatsu.style.display  = "";
+        labelJigyo.style.display = "none";
+        cellJigyo.style.display  = "none";
+        const note = finalZatsu === actualExp && actualExp > val9 ? "（実際の経費の方が大きいため、実際の経費を使います）" : "（特例による金額）";
+        cellZatsu.innerText = fmt(finalZatsu) + " " + note;
+      }
 
       keisanSection.style.display = "block";
     }
