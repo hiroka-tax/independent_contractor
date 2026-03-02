@@ -13,7 +13,9 @@
     .keisan-table .label-cell { width: 220px; }
     .keisan-table .num-cell { text-align: right; width: 110px; }
     .keisan-table .num-no-cell { text-align: center; width: 30px; font-weight: bold; color: #333; }
-    .keisan-table .circle { font-weight: bold; }
+    .note-cell { font-size: 12px; width: 200px; vertical-align: top; padding: 8px; }
+    .note-cell .note-title { font-weight: bold; }
+    .note-cell .note-transfer { margin-top: 10px; padding: 6px 8px; background: #eaf4fb; border-left: 3px solid #1a73e8; font-size: 11px; line-height: 1.6; }
     .print-btn { margin-top: 20px; padding: 10px 24px; font-size: 15px; background: #1a73e8; color: white; border: none; border-radius: 4px; cursor: pointer; }
     .print-btn:hover { background: #1558b0; }
     @media print {
@@ -71,10 +73,12 @@
           <td class="label-cell">総収入金額</td>
           <td class="num-cell" id="td1"></td>
           <td class="num-no-cell">①</td>
-          <td rowspan="9" style="font-size:12px; width:200px; vertical-align:top; padding:8px;">
-            <b>記入上の注意</b><br><br>
+          <td class="note-cell" rowspan="9" id="note-cell">
+            <div class="note-title">記入上の注意</div>
+            <br>
             ・⑤または⑥が赤字のときは0<br><br>
             ・この計算書を使った方は、申告書第二表の「特例適用条文等」欄に「措法２７」と書いてください。
+            <div class="note-transfer" id="note-transfer" style="display:none;"></div>
           </td>
         </tr>
         <tr>
@@ -172,7 +176,6 @@
       const val4 = (hasSalary  === "yes")  ? salary       : 0;
 
       // 令和7年分：給与収入が65万円未満の場合、給与所得控除額 = 給与収入
-      // そのため ⑤⑥ では ④（給与収入）をそのまま差し引く
       const val5 = Math.max(0, limit - val2 - val4);
       const val6 = Math.max(0, limit - val3 - val4);
 
@@ -201,6 +204,24 @@
       document.getElementById("td7").innerText = val7 > 0 ? fmt(val7) : "―";
       document.getElementById("td8").innerText = val8 > 0 ? fmt(val8) : "―";
       document.getElementById("td9").innerText = val9 > 0 ? fmt(val9) : "―";
+
+      // 申告書への転記案内（所得種類に応じて切り替え）
+      const noteTransfer = document.getElementById("note-transfer");
+      if (incomeType === "jigyo") {
+        noteTransfer.innerHTML =
+          "<b>【申告書への転記】</b><br>" +
+          "⑦または⑧の金額を、<br>" +
+          "青色申告の方：青色申告決算書の「必要経費」欄へ<br>" +
+          "白色申告の方：収支内訳書の「必要経費」欄へ<br>" +
+          "記入してください。";
+      } else {
+        noteTransfer.innerHTML =
+          "<b>【申告書への転記】</b><br>" +
+          "⑨の金額を、<br>" +
+          "確定申告書「雑所得」の「必要経費」欄へ<br>" +
+          "記入してください。";
+      }
+      noteTransfer.style.display = "";
 
       keisanSection.style.display = "block";
     }
