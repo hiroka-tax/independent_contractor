@@ -11,7 +11,8 @@
     .keisan-table th, .keisan-table td { border: 1px solid #333; padding: 6px 10px; }
     .keisan-table .row-header { background: #f5f5f5; font-weight: bold; text-align: center; width: 60px; }
     .keisan-table .label-cell { width: 220px; }
-    .keisan-table .num-cell { text-align: right; width: 130px; }
+    .keisan-table .num-cell { text-align: right; width: 110px; }
+    .keisan-table .num-no-cell { text-align: center; width: 30px; font-weight: bold; color: #333; }
     .keisan-table .circle { font-weight: bold; }
     .keisan-table .final-row td { background: #fffbe6; font-weight: bold; }
     .print-btn { margin-top: 20px; padding: 10px 24px; font-size: 15px; background: #1a73e8; color: white; border: none; border-radius: 4px; cursor: pointer; }
@@ -68,8 +69,9 @@
       <tbody>
         <tr>
           <td class="row-header" rowspan="2">事業所得</td>
-          <td class="label-cell">総収入金額 <span class="circle">①</span></td>
+          <td class="label-cell">総収入金額</td>
           <td class="num-cell" id="td1"></td>
+          <td class="num-no-cell">①</td>
           <td rowspan="11" style="font-size:12px; width:200px; vertical-align:top; padding:8px;">
             <b>記入上の注意</b><br><br>
             ・⑤または⑥が赤字のときは0<br><br>
@@ -77,50 +79,60 @@
           </td>
         </tr>
         <tr>
-          <td class="label-cell">特例適用前の必要経費の額 <span class="circle">②</span></td>
+          <td class="label-cell">特例適用前の必要経費の額</td>
           <td class="num-cell" id="td2"></td>
+          <td class="num-no-cell">②</td>
         </tr>
         <tr>
           <td class="row-header">雑所得</td>
-          <td class="label-cell">総収入金額（公的年金等に係るものを除く） <span class="circle">③</span></td>
+          <td class="label-cell">総収入金額（公的年金等に係るものを除く）</td>
           <td class="num-cell" id="td3"></td>
+          <td class="num-no-cell">③</td>
         </tr>
         <tr>
           <td class="row-header">給与所得</td>
-          <td class="label-cell">給与所得の収入金額 <span class="circle">④</span></td>
+          <td class="label-cell">給与所得の収入金額</td>
           <td class="num-cell" id="td4"></td>
+          <td class="num-no-cell">④</td>
         </tr>
         <tr>
           <td class="row-header"></td>
-          <td class="label-cell">65万円 － <span class="circle">②</span> － <span class="circle">④</span>（赤字のときは0） <span class="circle">⑤</span></td>
+          <td class="label-cell">65万円 － ② － ④（赤字のときは0）</td>
           <td class="num-cell" id="td5"></td>
+          <td class="num-no-cell">⑤</td>
         </tr>
         <tr>
           <td class="row-header"></td>
-          <td class="label-cell">65万円 － <span class="circle">③</span> － <span class="circle">④</span>（赤字のときは0） <span class="circle">⑥</span></td>
+          <td class="label-cell">65万円 － ③ － ④（赤字のときは0）</td>
           <td class="num-cell" id="td6"></td>
+          <td class="num-no-cell">⑥</td>
         </tr>
         <tr>
           <td class="row-header" rowspan="3">特例適用後の必要経費の額</td>
-          <td class="label-cell">事業所得<br><small>③がない場合または③が⑤以下の場合：①と⑥のいずれか少ない方の金額 <span class="circle">⑦</span><br>③が⑤より多い場合：②の金額 <span class="circle">⑧</span></small></td>
+          <td class="label-cell">事業所得<br><small>③がない場合または③が⑤以下の場合：①と⑥のいずれか少ない方の金額</small></td>
           <td class="num-cell" id="td7"></td>
+          <td class="num-no-cell">⑦</td>
         </tr>
         <tr>
-          <td class="label-cell"></td>
+          <td class="label-cell"><small>③が⑤より多い場合：②の金額</small></td>
           <td class="num-cell" id="td8"></td>
+          <td class="num-no-cell">⑧</td>
         </tr>
         <tr>
-          <td class="label-cell">雑所得：③と⑤のいずれか少ない方の金額 <span class="circle">⑨</span></td>
+          <td class="label-cell">雑所得：③と⑤のいずれか少ない方の金額</td>
           <td class="num-cell" id="td9"></td>
+          <td class="num-no-cell">⑨</td>
         </tr>
         <tr class="final-row">
           <td class="row-header" rowspan="2">申告に使う必要経費</td>
           <td class="label-cell" id="td-final-label-jigyo" style="display:none;">事業所得：⑦または⑧と②のいずれか大きい方</td>
           <td class="num-cell" id="td-final-jigyo" style="display:none;"></td>
+          <td class="num-no-cell" id="td-final-no-jigyo" style="display:none;"></td>
         </tr>
         <tr class="final-row">
           <td class="label-cell" id="td-final-label-zatsu" style="display:none;">雑所得：⑨と②のいずれか大きい方</td>
           <td class="num-cell" id="td-final-zatsu" style="display:none;"></td>
+          <td class="num-no-cell" id="td-final-no-zatsu" style="display:none;"></td>
         </tr>
       </tbody>
     </table>
@@ -208,16 +220,20 @@
       document.getElementById("td9").innerText = val9 > 0 ? fmt(val9) : "―";
 
       // 最終的な必要経費の表示
-      const labelJigyo = document.getElementById("td-final-label-jigyo");
-      const cellJigyo  = document.getElementById("td-final-jigyo");
-      const labelZatsu = document.getElementById("td-final-label-zatsu");
-      const cellZatsu  = document.getElementById("td-final-zatsu");
+      const labelJigyo   = document.getElementById("td-final-label-jigyo");
+      const cellJigyo    = document.getElementById("td-final-jigyo");
+      const noJigyo      = document.getElementById("td-final-no-jigyo");
+      const labelZatsu   = document.getElementById("td-final-label-zatsu");
+      const cellZatsu    = document.getElementById("td-final-zatsu");
+      const noZatsu      = document.getElementById("td-final-no-zatsu");
 
       if (incomeType === "jigyo") {
         labelJigyo.style.display = "";
         cellJigyo.style.display  = "";
+        noJigyo.style.display    = "";
         labelZatsu.style.display = "none";
         cellZatsu.style.display  = "none";
+        noZatsu.style.display    = "none";
         const note = finalJigyo === val2 && val2 > tokureiJigyo
           ? "（実際の経費の方が大きいため、実際の経費を使います）"
           : "（特例による金額）";
@@ -225,8 +241,10 @@
       } else {
         labelZatsu.style.display = "";
         cellZatsu.style.display  = "";
+        noZatsu.style.display    = "";
         labelJigyo.style.display = "none";
         cellJigyo.style.display  = "none";
+        noJigyo.style.display    = "none";
         const note = finalZatsu === actualExp && actualExp > val9
           ? "（実際の経費の方が大きいため、実際の経費を使います）"
           : "（特例による金額）";
