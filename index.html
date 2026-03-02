@@ -124,16 +124,6 @@
   </div>
 
   <script>
-    // 令和2年分以降の給与所得控除額
-    function calcSalaryDeduction(salary) {
-      if (salary <= 1625000) return 550000;
-      if (salary <= 1800000) return Math.floor(salary * 0.4) - 100000;
-      if (salary <= 3600000) return Math.floor(salary * 0.3) + 80000;
-      if (salary <= 6600000) return Math.floor(salary * 0.2) + 440000;
-      if (salary <= 8500000) return Math.floor(salary * 0.1) + 1100000;
-      return 1950000;
-    }
-
     function fmt(n) {
       return Math.round(n).toLocaleString() + ' 円';
     }
@@ -176,8 +166,9 @@
       const val3 = (incomeType === "zatsu") ? kanaiIncome : 0;
       const val4 = (hasSalary  === "yes")  ? salary       : 0;
 
-      // 給与所得控除額（④'）
-      const salaryDeduction = (val4 > 0) ? calcSalaryDeduction(val4) : 0;
+      // 令和7年分：給与所得控除額 = min(給与収入, 65万円)
+      // 給与収入が65万円未満の場合、控除額は給与収入と同額
+      const salaryDeduction = Math.min(val4, limit);
 
       // ⑤：65万円 - ② - ④'（赤字のときは0）
       const val5 = Math.max(0, limit - val2 - salaryDeduction);
