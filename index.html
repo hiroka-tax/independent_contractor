@@ -109,39 +109,52 @@
   <button class="print-btn" onclick="window.print()">印刷する（計算書のみ印刷されます）</button>
 </div>
 <script>
+  // 令和2年分以降の給与所得控除額
   function calcSalaryDeduction(salary) {
-    if (salary <= 1900000) return 650000;
-    if (salary <= 3600000) return salary * 0.30 + 80000;
-    if (salary <= 6600000) return salary * 0.20 + 440000;
-    if (salary <= 8500000) return salary * 0.10 + 1100000;
+    if (salary <= 1625000) return 550000;
+    if (salary <= 1800000) return Math.floor(salary * 0.4) - 100000;
+    if (salary <= 3600000) return Math.floor(salary * 0.3) + 80000;
+    if (salary <= 6600000) return Math.floor(salary * 0.2) + 440000;
+    if (salary <= 8500000) return Math.floor(salary * 0.1) + 1100000;
     return 1950000;
   }
-  function fmt(n) { return Math.round(n).toLocaleString() + ' 円'; }
+  function fmt(n) {
+    return Math.round(n).toLocaleString() + ' 円';
+  }
   function runCheck() {
-    const isSilver = document.querySelector('input[name="isSilver"]:checked')?.value;
-    const isBizOrMisc = document.querySelector('input[name="isBizOrMisc"]:checked')?.value;
-    const incomeType = document.querySelector('input[name="incomeType"]:checked')?.value;
-    const hasSalary = document.querySelector('input[name="hasSalary"]:checked')?.value;
-    const salary = parseFloat(document.getElementById("salaryValue").value) || 0;
+    const isSilver     = document.querySelector('input[name="isSilver"]:checked')?.value;
+    const isBizOrMisc  = document.querySelector('input[name="isBizOrMisc"]:checked')?.value;
+    const incomeType   = document.querySelector('input[name="incomeType"]:checked')?.value;
+    const hasSalary    = document.querySelector('input[name="hasSalary"]:checked')?.value;
+    const salary      = parseFloat(document.getElementById("salaryValue").value) || 0;
     const kanaiIncome = parseFloat(document.getElementById("kanaiIncome").value) || 0;
-    const actualExp = parseFloat(document.getElementById("actualExp").value) || 0;
-    const resultText = document.getElementById("result-text");
+    const actualExp   = parseFloat(document.getElementById("actualExp").value)   || 0;
+    const resultText    = document.getElementById("result-text");
     const keisanSection = document.getElementById("keisan-section");
     resultText.innerText = "";
     keisanSection.style.display = "none";
     if (!isSilver || !isBizOrMisc || !incomeType || !hasSalary) {
-      resultText.innerText = "すべての質問に答えてください。"; return;
+      resultText.innerText = "すべての質問に答えてください。";
+      return;
     }
     if (isSilver === "no" || isBizOrMisc === "no") {
-      resultText.innerText = "家内労働者等の特例の対象外です。"; return;
+      resultText.innerText = "家内労働者等の特例の対象外です。";
+      return;
     }
     const limit = 650000;
+    // 【修正3】給与収入が65万円以上なら特例なし（最初にチェック）
+    if (hasSalary === "yes" && salary >= limit) {
+      resultText.innerText = "給与収入が65万円以上のため、家内労働者特例の適用はありません。";
+      return;
+    }
     const val1 = (incomeType === "jigyo") ? kanaiIncome : 0;
-    const val2 = (incomeType === "jigyo") ? actualExp : 0;
+    const val2 = (incomeType === "jigyo") ? actualExp   : 0;
     const val3 = (incomeType === "zatsu") ? kanaiIncome : 0;
-    const val4 = (hasSalary === "yes") ? salary : 0;
-    const val5 = Math.max(0, limit - val2 - val4);
-    const val6 = Math.max(0, limit - val3 - val4);
+    const val4 = (hasSalary  === "yes")  ? salary       : 0;
+    // 【修正2】④は給与収入ではなく給与所得控除額を使う
+    const salaryDeduction = (val4 > 0) ? calcSalaryDeduction(val4) : 0;
+    const val5 = Math.max(0, limit - val2 - salaryDeduction);  // 65万 - ② - 給与所得控除額
+    const val6 = Math.max(0, limit - val3 - salaryDeduction);  // 65万 - ③ - 給与所得控除額
     let val7 = 0, val8 = 0, val9 = 0;
     if (incomeType === "jigyo") {
       if (val3 === 0 || val3 <= val5) {
@@ -153,11 +166,7 @@
     if (incomeType === "zatsu") {
       val9 = Math.min(val3, val5);
     }
-    const eligibleAmount = (incomeType === "jigyo") ? Math.max(val7, val8) : val9;
-    if (eligibleAmount <= 0 && val4 > 0 && calcSalaryDeduction(val4) >= limit) {
-      resultText.innerText = "給与所得控除額が大きく、家内労働者特例の適用枠がありません。"; return;
-    }
-    resultText.innerText = "特例の対象です！\n計算書を下に表示します。内容を確認して印刷してください。";
+    resultText.innerText = "特例の対象です！\\n計算書を下に表示します。内容を確認して印刷してください。";
     document.getElementById("td1").innerText = val1 > 0 ? fmt(val1) : "―";
     document.getElementById("td2").innerText = val2 > 0 ? fmt(val2) : "―";
     document.getElementById("td3").innerText = val3 > 0 ? fmt(val3) : "―";
@@ -172,3 +181,4 @@
 </script>
 </body>
 </html>
+
