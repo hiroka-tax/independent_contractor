@@ -70,7 +70,7 @@
           <td class="row-header" rowspan="2">事業所得</td>
           <td class="label-cell">総収入金額 <span class="circle">①</span></td>
           <td class="num-cell" id="td1"></td>
-          <td rowspan="12" style="font-size:12px; width:200px; vertical-align:top; padding:8px;">
+          <td rowspan="11" style="font-size:12px; width:200px; vertical-align:top; padding:8px;">
             <b>記入上の注意</b><br><br>
             ・⑤または⑥が赤字のときは0<br><br>
             ・この計算書を使った方は、申告書第二表の「特例適用条文等」欄に「措法２７」と書いてください。
@@ -86,23 +86,18 @@
           <td class="num-cell" id="td3"></td>
         </tr>
         <tr>
-          <td class="row-header">給与</td>
+          <td class="row-header">給与所得</td>
           <td class="label-cell">給与所得の収入金額 <span class="circle">④</span></td>
           <td class="num-cell" id="td4"></td>
         </tr>
         <tr>
           <td class="row-header"></td>
-          <td class="label-cell">④に対する給与所得控除額 <span class="circle">④'</span></td>
-          <td class="num-cell" id="td4d"></td>
-        </tr>
-        <tr>
-          <td class="row-header"></td>
-          <td class="label-cell">65万円 － <span class="circle">②</span> － <span class="circle">④'</span>（赤字のときは0） <span class="circle">⑤</span></td>
+          <td class="label-cell">65万円 － <span class="circle">②</span> － <span class="circle">④</span>（赤字のときは0） <span class="circle">⑤</span></td>
           <td class="num-cell" id="td5"></td>
         </tr>
         <tr>
           <td class="row-header"></td>
-          <td class="label-cell">65万円 － <span class="circle">③</span> － <span class="circle">④'</span>（赤字のときは0） <span class="circle">⑥</span></td>
+          <td class="label-cell">65万円 － <span class="circle">③</span> － <span class="circle">④</span>（赤字のときは0） <span class="circle">⑥</span></td>
           <td class="num-cell" id="td6"></td>
         </tr>
         <tr>
@@ -176,14 +171,10 @@
       const val3 = (incomeType === "zatsu") ? kanaiIncome : 0;
       const val4 = (hasSalary  === "yes")  ? salary       : 0;
 
-      // 令和7年分：給与所得控除額 = min(給与収入, 65万円)
-      // 給与収入が65万円未満の場合、控除額は給与収入と同額
-      const salaryDeduction = Math.min(val4, limit);
-
-      // ⑤：65万円 - ② - ④'（赤字のときは0）
-      const val5 = Math.max(0, limit - val2 - salaryDeduction);
-      // ⑥：65万円 - ③ - ④'（赤字のときは0）
-      const val6 = Math.max(0, limit - val3 - salaryDeduction);
+      // 令和7年分：給与収入が65万円未満の場合、給与所得控除額 = 給与収入
+      // そのため ⑤⑥ では ④（給与収入）をそのまま差し引く
+      const val5 = Math.max(0, limit - val2 - val4);
+      const val6 = Math.max(0, limit - val3 - val4);
 
       let val7 = 0, val8 = 0, val9 = 0;
 
@@ -206,16 +197,15 @@
 
       resultText.innerText = "特例の対象です！\n計算書を下に表示します。内容を確認して印刷してください。";
 
-      document.getElementById("td1").innerText  = val1 > 0 ? fmt(val1) : "―";
-      document.getElementById("td2").innerText  = val2 > 0 ? fmt(val2) : "―";
-      document.getElementById("td3").innerText  = val3 > 0 ? fmt(val3) : "―";
-      document.getElementById("td4").innerText  = val4 > 0 ? fmt(val4) : "―";
-      document.getElementById("td4d").innerText = salaryDeduction > 0 ? fmt(salaryDeduction) : "―";
-      document.getElementById("td5").innerText  = fmt(val5);
-      document.getElementById("td6").innerText  = fmt(val6);
-      document.getElementById("td7").innerText  = val7 > 0 ? fmt(val7) : "―";
-      document.getElementById("td8").innerText  = val8 > 0 ? fmt(val8) : "―";
-      document.getElementById("td9").innerText  = val9 > 0 ? fmt(val9) : "―";
+      document.getElementById("td1").innerText = val1 > 0 ? fmt(val1) : "―";
+      document.getElementById("td2").innerText = val2 > 0 ? fmt(val2) : "―";
+      document.getElementById("td3").innerText = val3 > 0 ? fmt(val3) : "―";
+      document.getElementById("td4").innerText = val4 > 0 ? fmt(val4) : "―";
+      document.getElementById("td5").innerText = fmt(val5);
+      document.getElementById("td6").innerText = fmt(val6);
+      document.getElementById("td7").innerText = val7 > 0 ? fmt(val7) : "―";
+      document.getElementById("td8").innerText = val8 > 0 ? fmt(val8) : "―";
+      document.getElementById("td9").innerText = val9 > 0 ? fmt(val9) : "―";
 
       // 最終的な必要経費の表示
       const labelJigyo = document.getElementById("td-final-label-jigyo");
@@ -228,14 +218,18 @@
         cellJigyo.style.display  = "";
         labelZatsu.style.display = "none";
         cellZatsu.style.display  = "none";
-        const note = finalJigyo === val2 && val2 > tokureiJigyo ? "（実際の経費の方が大きいため、実際の経費を使います）" : "（特例による金額）";
-        cellJigyo.innerText  = fmt(finalJigyo) + " " + note;
+        const note = finalJigyo === val2 && val2 > tokureiJigyo
+          ? "（実際の経費の方が大きいため、実際の経費を使います）"
+          : "（特例による金額）";
+        cellJigyo.innerText = fmt(finalJigyo) + " " + note;
       } else {
         labelZatsu.style.display = "";
         cellZatsu.style.display  = "";
         labelJigyo.style.display = "none";
         cellJigyo.style.display  = "none";
-        const note = finalZatsu === actualExp && actualExp > val9 ? "（実際の経費の方が大きいため、実際の経費を使います）" : "（特例による金額）";
+        const note = finalZatsu === actualExp && actualExp > val9
+          ? "（実際の経費の方が大きいため、実際の経費を使います）"
+          : "（特例による金額）";
         cellZatsu.innerText = fmt(finalZatsu) + " " + note;
       }
 
