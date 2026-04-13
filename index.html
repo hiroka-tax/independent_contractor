@@ -12,7 +12,7 @@
     .keisan-table .row-header { background: #f5f5f5; font-weight: bold; text-align: center; width: 60px; }
     .keisan-table .label-cell { width: 220px; }
     .keisan-table .num-cell { text-align: right; width: 110px; }
-    .keisan-table .num-no-cell { text-align: center; width: 30px; font-weight: bold; color: #333; }
+    .keisan-table .num-no-cell { text-align: center; width: 30px; font-weight: hbold; color: #333; }
     .note-cell { font-size: 12px; width: 200px; vertical-align: top; padding: 8px; }
     .note-cell .note-title { font-weight: bold; }
     .note-cell .note-transfer { margin-top: 10px; padding: 6px 8px; background: #eaf4fb; border-left: 3px solid #1a73e8; font-size: 11px; line-height: 1.7; }
@@ -100,13 +100,13 @@
         </tr>
         <tr>
           <td class="row-header"></td>
-          <td class="label-cell">65万円 － ② － ④（赤字のときは0）</td>
+          <td class="label-cell">69万円 － ② － ④（赤字のときは0）</td>
           <td class="num-cell" id="td5"></td>
           <td class="num-no-cell">⑤</td>
         </tr>
         <tr>
           <td class="row-header"></td>
-          <td class="label-cell">65万円 － ③ － ④（赤字のときは0）</td>
+          <td class="label-cell">69万円 － ③ － ④（赤字のときは0）</td>
           <td class="num-cell" id="td6"></td>
           <td class="num-no-cell">⑥</td>
         </tr>
@@ -184,7 +184,7 @@
       const limit = 650000;
 
       if (hasSalary === "yes" && salary >= limit) {
-        resultText.innerText = "給与収入が65万円以上のため、家内労働者特例の適用はありません。";
+        resultText.innerText = "給与収入が69万円以上のため、家内労働者特例の適用はありません。";
         return;
       }
 
